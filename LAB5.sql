@@ -366,7 +366,7 @@ where	major = 'cs'
 ---------
 
 
--- แสดงชื่อของอาจารย์ภาควิชา CS ที่ไม่เคยสอนวิชา Programming
+-- 28 แสดงชื่อของอาจารย์ภาควิชา CS ที่ไม่เคยสอนวิชา Programming
 select	name
 from	lecturer
 where	lecid not in (
@@ -378,14 +378,14 @@ where	lecid not in (
 )
 
 
--- แสดงจำนวนนิสิตที่ลงทะเบียนเรียนในเทอม 2025-2 
+-- 29 แสดงจำนวนนิสิตที่ลงทะเบียนเรียนในเทอม 2025-2 
 select 	count(*)
 from 	enroll enr
 join	section sec		on sec.secid = enr.secid 
 where	sec.term  = '2025-2'
 
 
--- แสดง รหัสอาจารย์และชื่อ ของอาจารย์ที่ไม่ได้สอนในภาคเรียน 2026-1
+-- 30 แสดง รหัสอาจารย์และชื่อ ของอาจารย์ที่ไม่ได้สอนในภาคเรียน 2026-1
 select 	*
 from	lecturer
 where 	lecid not in (
@@ -396,14 +396,204 @@ where 	lecid not in (
 )
 
 
--- แสดง name, ปีเกิด, อายุ ของนิสิตที่อายุน้อยที่สุด
--- แสดง name, ปีเกิด, อายุ ของนิสิตที่อายุมากที่สุด ใน major CS
--- แสดง ข้อมูล ของนิสิตที่ได้ GPA สูงที่สุดในมหาวิทยาลัย
--- แสดง ข้อมูล ของนิสิตที่ได้ GPA สูงที่สุดใน major CS
--- แสดง ข้อมูล ของนิสิตที่ได้ GPA สูงที่สุดใน major Thai
--- แสดง ข้อมูล ของ นิสิตที่เคยลงทะเบียนเรียน และไม่เคยติด F เลย
--- แสดงรหัสวิชาและ ชื่อวิชา ที่ไม่เคยเปิดสอนเลย
+-- 31 แสดง name, ปีเกิด, อายุ ของนิสิตที่อายุน้อยที่สุด
+select 	name
+		, birthday 
+		, timestampdiff(year, birthday, curdate()) as age
+from 	student
+where 	timestampdiff(year, birthday, curdate()) = (
+			select 	min(timestampdiff(year, birthday, curdate()))
+			from student
+		)
+
+		
+-- 32 แสดง name, ปีเกิด, อายุ ของนิสิตที่อายุมากที่สุด ใน major CS
+select 	name
+		, birthday 
+		, timestampdiff(year, birthday, curdate()) as age
+from 	student
+where 	major = 'cs'
+	and	timestampdiff(year, birthday, curdate()) = (
+			select 	min(timestampdiff(year, birthday, curdate()))
+			from student
+			where major = 'cs'
+		)
+		
+		
+-- 33 แสดง ข้อมูล ของนิสิตที่ได้ GPA สูงที่สุดในมหาวิทยาลัย
+select 	*
+from 	student
+where	gpa = (select max(gpa) from student)
+		
+
+-- 34 แสดง ข้อมูล ของนิสิตที่ได้ GPA สูงที่สุดใน major CS
+select 	*
+from 	student
+where	major = 'cs'
+	and gpa = (select max(gpa) from student where major = 'cs')
 
 
+-- 35 แสดง ข้อมูล ของนิสิตที่ได้ GPA สูงที่สุดใน major Thai
+select 	*
+from 	student
+where	major = 'thai'
+	and gpa = (select max(gpa) from student where major = 'thai')
 
 
+	
+-- 36 แสดง ข้อมูล ของ นิสิตที่เคยลงทะเบียนเรียน และไม่เคยติด F เลย
+select	*
+from 	student
+where	stdid not in (
+			select	distinct std.stdid
+			from 	student std
+			join	enroll	enr	on enr.stdid = std.stdid 
+			where	grade = 'f'
+		)
+
+-- 37 แสดงรหัสวิชาและ ชื่อวิชา ที่ไม่เคยเปิดสอนเลย
+select 	*
+from	subject
+where 	subid not in (
+			select 	distinct sub.subid 
+			from	subject sub
+			join	section	sec	on sec.subid = sub.subid
+		)
+
+
+---------
+-- 5.5 --
+---------
+
+
+-- 38 แสดง รหัสนิสิต, และจำนวนครั้งที่ลงเรียน เฉพาะนิสิตที่อยู่ major CS
+-- ตัวอย่างการแสดงผล
+-- stdid		Amount
+-- 50001		5
+-- 50002		4
+-- 50003		4
+-- 50004		2
+select	std.stdid
+		, count(*) as Amount
+from	student std
+join	enroll 	enr 	on enr.stdid = std.stdid 
+group by std.stdid 
+
+
+-- 39 แสดง เกรด, จำนวนครั้งที่ได้เกรดนั้น ๆ ของนิสิตชื่อ Sakuragi
+-- ตัวอย่างการแสดงผล
+-- grade		Amount
+-- A		1
+-- B		2
+-- F		1
+select	enr.grade
+		, count(*) as Amount
+from	enroll	enr
+join	student	std	on std.stdid = enr.stdid 
+where	std.name = 'sakuragi'
+group by enr.grade
+order by grade
+
+
+-- 40 แสดงข้อมูลทุกอย่างของอาจารย์ที่เคยสอนมากกว่า 3 ครั้ง
+-- ตัวอย่างการแสดงผล
+-- 	lid		name			salary		major
+-- 	t01		Peter Parker		40000		CS
+-- 	t02		Steve Roger		50000		CS
+-- 	t03		Edward Norton		55000		MIS
+-- 	t05		Iron Man		65000		MIS
+
+
+select 	lec.lecid
+		, lec.name
+		, lec.salary
+		, lec.major 
+from	lecturer lec
+join	section	sec		on sec.lecid = lec.lecid 
+group by lec.lecid 
+having count(*) > 3
+
+
+-- 41 แสดงข้อมูลของอาจารย์ CS ที่เคยสอนวิชา Programming มากกว่า 2 ครั้ง
+select 	lec.lecid
+		, lec.name
+		, lec.salary
+		, lec.major 
+from	lecturer lec
+join	section	sec		on sec.lecid = lec.lecid 
+join	subject sub		on sub.subid = sec.subid 
+where	sub.name = 'programming'
+group by lec.lecid 
+having count(*) > 2
+
+
+-- 42 แสดงรหัสอาจารย์ เทอมที่สอน และจำนวนวิชาที่สอนในเทอมนั้น
+-- เฉพาะอาจารย์ที่สอนมากกว่า 1 วิชาในเทอมนั้น โดยเรียงลำดับตามรหัสอาจารย์
+select	lec.lecid 
+		, sec.term
+		, count(*) 		as subject_count
+from	lecturer lec
+join	section sec		on sec.lecid = lec.lecid 
+group by lec.lecid, sec.term
+having	count(*) > 1
+order by lecid
+	
+	
+---------
+-- 5.6 --
+---------
+
+select * from enroll
+
+-- 1 ให้นิสิตทุกคนที่เรียนวิชา CS004 ในเทอม 2025-1 ได้เกรด A
+update	enroll
+set		grade = 'A'
+where	secid in (
+		select	enr.secid
+			from	enroll enr
+			join	section sec		on sec.secid  = enr.secid 
+			where	sec.subid = 'cs004'
+				and sec.term = '2025-1'	
+	)
+	and	stdid in (
+			select	enr.stdid 
+			from	enroll enr
+			join	section sec		on sec.secid  = enr.secid 
+			where	sec.subid = 'cs004'
+				and sec.term = '2025-1'
+		)
+
+-- 2 เพิ่มเงินเดือน 10 % ให้อาจารย์ทุกคนที่สอนในปี 2025
+update 	lecturer
+set		salary = salary * 1.1
+where 	lecid in (
+			select	distinct lecid
+			from 	section
+			where	term like '2025%'
+		)
+		
+select * from lecturer
+
+-- 3 เพิ่มเงินเดือน 20% ให้อาจารย์ทุกคนที่มีเงินเดือนต่ำกว่าค่าเฉลี่ยเงินเดือนของอาจารย์ทั้งหมด
+update 	lecturer
+set		salary = salary * 1.2
+where 	salary < (
+			select	avg(salary)
+			from 	lecturer
+		)
+				
+select * from lecturer
+
+
+-- 4. เพิ่มเงินเดือน 10% ให้อาจารย์ที่สอนมากกว่า 1วิชาในเทอม 2025-1
+update 	lecturer
+set		salary = salary * 1.1
+where 	lecid in (
+			select lecid
+			from section
+			group by lecid
+			having count(*) > 1
+		)
+		
+		
+select * from lecturer
